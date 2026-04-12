@@ -461,10 +461,21 @@ $('save-config-btn').addEventListener('click',()=>{
   if(!raw){err.textContent='Please paste your Firebase config.';err.classList.remove('hidden');return;}
   let cfg;
   try {
-    let c=raw; const m=raw.match(/\{[\s\S]*\}/); if(m) c=m[0];
-    c=c.replace(/(\w+)\s*:/g,'"$1":').replace(/'/g,'"').replace(/,\s*}/g,'}').replace(/,\s*]/g,']').replace(/""+/g,'"');
-    cfg=JSON.parse(c);
-  } catch(e) { err.textContent='Invalid JSON. Copy the firebaseConfig object from Firebase Console.'; err.classList.remove('hidden'); return; }
+    let c=raw;
+    const m=raw.match(/\{[\s\S]*\}/); if(m) c=m[0];
+    try { cfg=JSON.parse(c); } catch(_) {
+      // Extract key-value pairs manually from any format
+      const pairs={};
+      const re=/(\w+)\s*:\s*"([^"]*)"/g;
+      let match; while((match=re.exec(c))!==null) pairs[match[1]]=match[2];
+      if(!Object.keys(pairs).length){
+        const re2=/(\w+)\s*:\s*'([^']*)'/g;
+        while((match=re2.exec(c))!==null) pairs[match[1]]=match[2];
+      }
+      if(Object.keys(pairs).length) cfg=pairs;
+      else throw new Error('no pairs found');
+    }
+  } catch(e) { err.textContent='Could not parse config. Try pasting the firebaseConfig object from Firebase Console.'; err.classList.remove('hidden'); return; }
   if(!cfg.apiKey||!cfg.projectId){err.textContent='Missing apiKey or projectId.';err.classList.remove('hidden');return;}
   if(initFB(cfg)){
     localStorage.setItem(FB_CFG_KEY,JSON.stringify(cfg));
