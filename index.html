@@ -114,7 +114,7 @@ tailwind.config = {
       <span class="font-display text-2xl sm:text-3xl text-ink-600 italic tracking-tight">Ink Cards</span>
     </div>
     <p class="text-ink-400 font-body text-sm sm:text-base max-w-md mx-auto leading-relaxed">
-      Type a character &mdash; pinyin and meaning appear instantly.<br class="hidden sm:block">
+      Type in Chinese or English &mdash; pinyin and meaning appear instantly.<br class="hidden sm:block">
       <span class="brush-underline">Click a card to reveal its meaning.</span>
     </p>
     <p class="text-ink-300 text-xs mt-2">1,100+ built-in words &middot; HSK 1&ndash;6 &middot; cloud sync via Google</p>
@@ -125,9 +125,9 @@ tailwind.config = {
       <div class="flex items-center gap-2 mb-5"><div class="w-1.5 h-1.5 rounded-full bg-vermillion"></div><h2 class="font-display text-lg text-ink-700">Add a new card</h2></div>
       <div id="add-card-form" class="space-y-4">
         <div>
-          <label for="input-chinese" class="block text-xs font-medium text-ink-500 mb-1.5 tracking-wide uppercase">Chinese Character or Word</label>
+          <label for="input-chinese" class="block text-xs font-medium text-ink-500 mb-1.5 tracking-wide uppercase">Search in Chinese, English, or Pinyin</label>
           <div class="flex gap-2">
-            <input type="text" id="input-chinese" placeholder="Type a character, e.g. 热" class="flex-1 px-4 py-2.5 bg-ink-50 border border-ink-200 rounded-xl text-ink-800 font-chinese text-xl text-center placeholder:text-ink-300 placeholder:text-base placeholder:font-body transition-all duration-200">
+            <input type="text" id="input-chinese" placeholder="热 · hot · rè" class="flex-1 px-4 py-2.5 bg-ink-50 border border-ink-200 rounded-xl text-ink-800 text-lg text-center placeholder:text-ink-300 placeholder:text-base placeholder:font-body transition-all duration-200">
             <button id="lookup-btn" class="flex items-center gap-2 bg-vermillion hover:bg-vermillion-dark text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 hover:shadow-md active:scale-[0.97] whitespace-nowrap">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>Look up
             </button>
@@ -162,7 +162,7 @@ tailwind.config = {
   <div id="empty-state" class="hidden text-center py-16 sm:py-24">
     <div class="gentle-pulse mb-5"><span class="font-chinese text-6xl text-ink-200">字</span></div>
     <p class="text-ink-400 font-display text-lg italic mb-1">No cards yet</p>
-    <p class="text-ink-300 text-sm">Type a Chinese character above and hit Look up.</p>
+    <p class="text-ink-300 text-sm">Search in Chinese or English above to get started.</p>
   </div>
 </div>
 
@@ -309,14 +309,38 @@ function showStatus(msg,type) {
 
 function performLookup() {
   const q=inputChinese.value.trim();
-  if (!q) { showStatus('Please enter a Chinese character or word.','warning'); return; }
+  if (!q) { showStatus('Type a Chinese character, English word, or pinyin.','warning'); return; }
   resultsSelector.classList.add('hidden'); fieldsRow.classList.add('hidden'); addBtnRow.classList.add('hidden');
+
+  // Detect if input is Chinese characters or Latin text
+  const isChinese = /[\u4e00-\u9fff]/.test(q);
   const res=lookupDict(q);
-  if (!res.length) { showStatus(`No match for \u201c<span class="font-chinese">${esc(q)}</span>\u201d. Fill in manually.`,'not-found'); showMF('',''); return; }
+
+  if (!res.length) {
+    const label = isChinese ? `<span class="font-chinese">${esc(q)}</span>` : `"${esc(q)}"`;
+    showStatus(`No match for ${label}. Fill in manually.`,'not-found');
+    if (isChinese) showMF('','');
+    else { inputChinese.value=''; showMF('',''); }
+    return;
+  }
+
   const ex=res.filter(r=>r.s===q);
-  if (ex.length===1) { showStatus(`<span class="font-chinese font-bold">${esc(q)}</span> \u2192 ${esc(ex[0].p)}`,'success'); showMF(ex[0].p,ex[0].e); }
-  else if (ex.length>1) { showStatus(`Found ${ex.length} definitions for <span class="font-chinese font-bold">${esc(q)}</span>:`,'success'); showRP(ex); }
-  else { showStatus('No exact match. Related entries:','not-found'); showRP(res); }
+
+  if (isChinese && ex.length===1) {
+    // Exact Chinese match
+    showStatus(`<span class="font-chinese font-bold">${esc(q)}</span> \u2192 ${esc(ex[0].p)}`,'success');
+    showMF(ex[0].p, ex[0].e);
+  } else if (isChinese && ex.length>1) {
+    showStatus(`Found ${ex.length} definitions for <span class="font-chinese font-bold">${esc(q)}</span>:`,'success');
+    showRP(ex);
+  } else if (!isChinese) {
+    // English or pinyin search — always show results picker
+    showStatus(`Found ${res.length} match${res.length>1?'es':''} for "${esc(q)}":`,'success');
+    showRP(res);
+  } else {
+    showStatus(`No exact match. Related entries:`,'not-found');
+    showRP(res);
+  }
 }
 
 function showRP(res) {
