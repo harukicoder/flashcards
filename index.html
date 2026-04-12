@@ -188,32 +188,72 @@ function lookupDict(q){
 const POS_LABELS={verb:'Verb',noun:'Noun',adj:'Adj',adv:'Adv',num:'Num',conj:'Conj',mw:'MW',part:'Part',pron:'Pron',expr:'Expr',other:'Other'};
 const HSK_LABELS={1:'HSK 1',2:'HSK 2',3:'HSK 3',4:'HSK 4+'};
 
-// ═══ TTS (Google Translate neural voice) ═══
+// ═══ TTS (multi-source with smart voice selection) ═══
 let currentAudio = null;
+let cachedVoice = null;
+
+// Find the best Chinese voice available in the browser
+function getBestVoice() {
+  if (cachedVoice) return cachedVoice;
+  if (!window.speechSynthesis) return null;
+  const voices = window.speechSynthesis.getVoices();
+  // Ranked preference: neural/premium voices first
+  const preferred = [
+    // macOS / iOS high-quality voices
+    'Tingting', 'Sinji', 'Meijia', 'Lili',
+    // Chrome / Android neural voices
+    'Google 普通话', 'Google Mandarin', 'Microsoft Xiaoxiao',
+    'Microsoft Yunyang', 'Microsoft Xiaoyi',
+    // Edge neural voices
+    'Xiaoxiao', 'Yunyang', 'Xiaoyi', 'Yunxi',
+  ];
+  for (const name of preferred) {
+    const v = voices.find(v => v.name.includes(name));
+    if (v) { cachedVoice = v; return v; }
+  }
+  // Fallback: any zh-CN voice, preferring non-compact ones
+  const zhVoices = voices.filter(v => v.lang.startsWith('zh'));
+  const neural = zhVoices.find(v => !v.name.includes('Compact') && !v.name.includes('eSpeak'));
+  cachedVoice = neural || zhVoices[0] || null;
+  return cachedVoice;
+}
+
 function speak(text, rate) {
-  // Stop any currently playing audio
-  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
-  // Google Translate TTS - natural sounding Mandarin
+  // Stop anything currently playing
+  if (currentAudio) { currentAudio.pause(); currentAudio.currentTime = 0; currentAudio = null; }
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+
+  // Try Google Translate TTS first (most natural)
   const url = `https://translate.google.com/translate_tts?ie=UTF-8&tl=zh-CN&client=tw-ob&q=${encodeURIComponent(text)}`;
   const audio = new Audio(url);
   currentAudio = audio;
-  audio.play().catch(() => {
-    // Fallback to browser TTS if Google TTS is blocked
+
+  const useWebSpeech = () => {
     if (!window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'zh-CN'; u.rate = 0.85;
-    const voices = window.speechSynthesis.getVoices();
-    const zhVoice = voices.find(v => v.lang.startsWith('zh'));
-    if (zhVoice) u.voice = zhVoice;
+    u.lang = 'zh-CN';
+    u.rate = 0.9;
+    const voice = getBestVoice();
+    if (voice) u.voice = voice;
     window.speechSynthesis.speak(u);
-  });
+  };
+
+  // Set a timeout — if audio doesn't start in 1.5s, fall back
+  let started = false;
+  const fallbackTimer = setTimeout(() => {
+    if (!started) { audio.pause(); useWebSpeech(); }
+  }, 1500);
+
+  audio.onplaying = () => { started = true; clearTimeout(fallbackTimer); };
   audio.onended = () => { currentAudio = null; };
+  audio.onerror = () => { clearTimeout(fallbackTimer); useWebSpeech(); };
+  audio.play().catch(() => { clearTimeout(fallbackTimer); useWebSpeech(); });
 }
-// Preload browser voices as fallback
+
+// Preload voices (they load async)
 if (window.speechSynthesis) {
   window.speechSynthesis.getVoices();
-  window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged = () => { cachedVoice = null; getBestVoice(); };
 }
 
 // ═══ FIREBASE ═══
