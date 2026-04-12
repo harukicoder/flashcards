@@ -83,45 +83,13 @@ tailwind.config = {
   .sync-badge.syncing { background: rgba(196,70,58,0.08); color: #c4463a; }
   @keyframes spin { to { transform: rotate(360deg); } }
   .spinner-sm { width: 12px; height: 12px; border: 1.5px solid rgba(196,70,58,0.2); border-top-color: #c4463a; border-radius: 50%; animation: spin 0.6s linear infinite; display: inline-block; }
-  .setup-overlay { position: fixed; inset: 0; z-index: 300; background: rgba(250,249,247,0.97); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
-  .setup-overlay.open { opacity: 1; pointer-events: auto; }
-  .setup-card { background: white; border: 1px solid #e8e4db; border-radius: 1.25rem; padding: 2rem; max-width: 520px; width: 90%; box-shadow: 0 24px 48px rgba(31,27,23,0.08); max-height: 90vh; overflow-y: auto; }
-  .step-num { width: 24px; height: 24px; border-radius: 50%; background: #c4463a; color: white; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
 </style>
 </head>
 <body class="relative z-10">
 
 <div id="toast" class="toast"><div class="bg-ink-800 text-ink-100 px-5 py-3 rounded-xl text-sm font-medium shadow-lg flex items-center gap-2"><span id="toast-icon"></span><span id="toast-text"></span></div></div>
 
-<!-- Firebase Setup Overlay -->
-<div id="setup-overlay" class="setup-overlay">
-  <div class="setup-card">
-    <div class="text-center mb-6">
-      <span class="font-chinese text-3xl text-ink-800">墨卡</span>
-      <p class="text-ink-500 text-sm mt-2">One-time setup for cloud sync</p>
-    </div>
-    <div class="bg-ink-50 border border-ink-200 rounded-xl p-4 mb-5">
-      <p class="text-ink-600 text-sm mb-3 font-medium">To sync across devices with Google Sign-In, create a free Firebase project (~3 min):</p>
-      <div class="space-y-3 text-sm text-ink-500">
-        <div class="flex gap-3 items-start"><span class="step-num">1</span><span>Go to <a href="https://console.firebase.google.com" target="_blank" class="text-vermillion underline underline-offset-2">console.firebase.google.com</a> &rarr; <strong>Add project</strong></span></div>
-        <div class="flex gap-3 items-start"><span class="step-num">2</span><span><strong>Authentication</strong> &rarr; Get started &rarr; enable <strong>Google</strong> provider</span></div>
-        <div class="flex gap-3 items-start"><span class="step-num">3</span><span><strong>Firestore Database</strong> &rarr; Create database &rarr; <strong>Start in test mode</strong></span></div>
-        <div class="flex gap-3 items-start"><span class="step-num">4</span><span>Project Settings (gear icon) &rarr; Your apps &rarr; <strong>Web (&lt;/&gt;)</strong> &rarr; register an app &rarr; copy the <code class="bg-ink-800 text-ink-100 px-1.5 py-0.5 rounded text-xs">firebaseConfig</code> object</span></div>
-      </div>
-    </div>
-    <div class="space-y-3 mb-5">
-      <label class="block text-xs font-medium text-ink-500 tracking-wide uppercase">Paste your Firebase config</label>
-      <textarea id="firebase-config-input" rows="7" placeholder='{ "apiKey": "AIza...", "authDomain": "your-app.firebaseapp.com", "projectId": "your-app" }'
-        class="w-full px-4 py-3 bg-ink-50 border border-ink-200 rounded-xl text-ink-700 text-xs font-mono placeholder:text-ink-300 resize-none transition-all"></textarea>
-      <p id="config-error" class="text-vermillion text-xs hidden"></p>
-    </div>
-    <div class="flex gap-3">
-      <button id="skip-setup-btn" class="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium border border-ink-200 text-ink-500 hover:text-ink-700 hover:border-ink-400 transition-all">Skip &middot; offline only</button>
-      <button id="save-config-btn" class="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium bg-vermillion hover:bg-vermillion-dark text-white transition-all">Save &amp; Connect</button>
-    </div>
-    <p class="text-ink-300 text-xs text-center mt-4">Config is stored locally in this browser only.</p>
-  </div>
-</div>
+<!-- Firebase auto-configured -->
 
 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
   <!-- Auth Bar -->
@@ -136,9 +104,6 @@ tailwind.config = {
         <img id="user-avatar" src="" alt=""><span id="user-name" class="text-ink-600 font-medium"></span>
         <button class="logout-btn" id="signout-btn" title="Sign out"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg></button>
       </div>
-      <button id="reconfigure-btn" class="hidden text-ink-300 hover:text-ink-500 transition-colors ml-2" title="Reconfigure Firebase">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-      </button>
     </div>
   </div>
 
@@ -227,11 +192,16 @@ function lookupDict(q) {
 }
 
 // ═══════════ FIREBASE SYNC ═══════════
-const FB_CFG_KEY = 'inkCards_firebaseConfig';
 const STORAGE_KEY = 'inkCards_flashcards';
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyAoJa0pMA-nhJSbyJ9qjjkpXeKR4UD6UV0",
+  authDomain: "chinese-flashcards-piao.firebaseapp.com",
+  projectId: "chinese-flashcards-piao",
+  storageBucket: "chinese-flashcards-piao.firebasestorage.app",
+  messagingSenderId: "614147827163",
+  appId: "1:614147827163:web:184948e51410dda5bd33fe"
+};
 let db=null, currentUser=null, unsubSnap=null, fbReady=false, cloudSyncing=false;
-
-function getCfg() { try { return JSON.parse(localStorage.getItem(FB_CFG_KEY)); } catch { return null; } }
 
 function initFB(cfg) {
   try {
@@ -261,10 +231,9 @@ function signIn() {
 function signOut() { firebase.auth().signOut(); currentUser=null; updateAuthUI(); stopSync(); showToast('Signed out','info'); }
 
 function updateAuthUI() {
-  const sb=$('signin-btn'), ui=$('user-info'), ss=$('sync-status'), rc=$('reconfigure-btn');
-  if (!fbReady) { sb.classList.add('hidden'); ui.classList.add('hidden'); rc.classList.add('hidden');
-    ss.innerHTML='<span class="sync-badge local"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>Local only</span>'; return; }
-  rc.classList.remove('hidden');
+  const sb=$('signin-btn'), ui=$('user-info'), ss=$('sync-status');
+  if (!fbReady) { sb.classList.add('hidden'); ui.classList.add('hidden');
+    ss.innerHTML='<span class="sync-badge local"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>Offline</span>'; return; }
   if (currentUser) {
     sb.classList.add('hidden'); ui.classList.remove('hidden');
     $('user-avatar').src = currentUser.photoURL||'';
@@ -450,50 +419,10 @@ shuffleBtn.addEventListener('click',shuffleCards);
 $('signin-btn').addEventListener('click',signIn);
 $('signout-btn').addEventListener('click',signOut);
 
-// Setup overlay
-const setupOverlay=$('setup-overlay');
-$('skip-setup-btn').addEventListener('click',()=>{
-  localStorage.setItem(FB_CFG_KEY,'"skipped"'); setupOverlay.classList.remove('open'); updateAuthUI();
-});
-$('save-config-btn').addEventListener('click',()=>{
-  const raw=$('firebase-config-input').value.trim();
-  const err=$('config-error'); err.classList.add('hidden');
-  if(!raw){err.textContent='Please paste your Firebase config.';err.classList.remove('hidden');return;}
-  let cfg;
-  try {
-    let c=raw;
-    const m=raw.match(/\{[\s\S]*\}/); if(m) c=m[0];
-    try { cfg=JSON.parse(c); } catch(_) {
-      // Extract key-value pairs manually from any format
-      const pairs={};
-      const re=/(\w+)\s*:\s*"([^"]*)"/g;
-      let match; while((match=re.exec(c))!==null) pairs[match[1]]=match[2];
-      if(!Object.keys(pairs).length){
-        const re2=/(\w+)\s*:\s*'([^']*)'/g;
-        while((match=re2.exec(c))!==null) pairs[match[1]]=match[2];
-      }
-      if(Object.keys(pairs).length) cfg=pairs;
-      else throw new Error('no pairs found');
-    }
-  } catch(e) { err.textContent='Could not parse config. Try pasting the firebaseConfig object from Firebase Console.'; err.classList.remove('hidden'); return; }
-  if(!cfg.apiKey||!cfg.projectId){err.textContent='Missing apiKey or projectId.';err.classList.remove('hidden');return;}
-  if(initFB(cfg)){
-    localStorage.setItem(FB_CFG_KEY,JSON.stringify(cfg));
-    setupOverlay.classList.remove('open'); setupAuth(); updateAuthUI();
-    showToast('Firebase connected!','success');
-  } else { err.textContent='Failed to init Firebase. Check config.'; err.classList.remove('hidden'); }
-});
-$('reconfigure-btn').addEventListener('click',()=>{
-  const ex=getCfg(); if(ex&&typeof ex==='object') $('firebase-config-input').value=JSON.stringify(ex,null,2);
-  setupOverlay.classList.add('open');
-});
-
 // Init
 renderCards(true);
-const sc=getCfg();
-if(!sc) setupOverlay.classList.add('open');
-else if(sc==='skipped') updateAuthUI();
-else { if(initFB(sc)) setupAuth(); updateAuthUI(); }
+if(initFB(FIREBASE_CONFIG)) setupAuth();
+updateAuthUI();
 </script>
 </body>
 </html>
