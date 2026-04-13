@@ -124,6 +124,10 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:#c4463a!import
           <div class="flex items-center gap-1.5 mb-2"><svg class="w-3.5 h-3.5 text-ink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg><span class="text-xs font-medium text-ink-500 uppercase tracking-wide">Examples</span></div>
           <div id="examples-content" class="space-y-2"></div>
         </div>
+        <!-- Radicals & Related words preview -->
+        <div id="radical-preview" class="hidden bg-ink-50 border border-ink-200/50 rounded-xl p-4">
+          <div id="radical-content"></div>
+        </div>
         <div id="fields-row" class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 hidden">
           <div><label for="input-pinyin" class="block text-xs font-medium text-ink-500 mb-1.5 tracking-wide uppercase">Pinyin <span class="text-ink-300 normal-case font-normal">&middot; editable</span></label><input type="text" id="input-pinyin" placeholder="r&egrave;" class="w-full px-4 py-2.5 bg-ink-50 border border-ink-200 rounded-xl text-ink-700 text-center placeholder:text-ink-300 transition-all"></div>
           <div><label for="input-english" class="block text-xs font-medium text-ink-500 mb-1.5 tracking-wide uppercase">English <span class="text-ink-300 normal-case font-normal">&middot; editable</span></label><input type="text" id="input-english" placeholder="hot" class="w-full px-4 py-2.5 bg-ink-50 border border-ink-200 rounded-xl text-ink-700 text-center placeholder:text-ink-300 transition-all"></div>
@@ -187,6 +191,85 @@ function lookupDict(q){
 
 const POS_LABELS={verb:'Verb',noun:'Noun',adj:'Adj',adv:'Adv',num:'Num',conj:'Conj',mw:'MW',part:'Part',pron:'Pron',expr:'Expr',other:'Other'};
 const HSK_LABELS={1:'HSK 1',2:'HSK 2',3:'HSK 3',4:'HSK 4+'};
+
+// ═══ RADICALS & RELATED WORDS ═══
+const RADICALS = {"人":"person","口":"mouth","手":"hand","心":"heart","水":"water","火":"fire","木":"wood","金":"metal/gold","土":"earth/soil","日":"sun/day","月":"moon/month","山":"mountain","石":"stone","田":"field","目":"eye","耳":"ear","刀":"knife","力":"power/strength","女":"woman","子":"child","马":"horse","鸟":"bird","鱼":"fish","虫":"insect","犬":"dog","牛":"cow/ox","羊":"sheep","竹":"bamboo","米":"rice","禾":"grain","食":"food/eat","衣":"clothing","门":"door/gate","车":"vehicle","言":"speech/words","走":{"r":"土+止","m":"earth + stop → to walk"},"足":"foot","雨":"rain","风":"wind","草":"grass","花":{"r":"草+化","m":"grass + change → flower"},"树":"tree","爱":{"r":"爫+冖+友","m":"claws + cover + friend → love"},"学":{"r":"⺍+冖+子","m":"knowledge + cover + child → to study"},"好":{"r":"女+子","m":"woman + child → good"},"妈":{"r":"女+马","m":"woman + horse (sound) → mother"},"她":{"r":"女+也","m":"woman + also → she"},"姐":{"r":"女+且","m":"woman + moreover → older sister"},"妹":{"r":"女+未","m":"woman + not yet → younger sister"},"姓":{"r":"女+生","m":"woman + born → surname"},"明":{"r":"日+月","m":"sun + moon → bright/clear"},"想":{"r":"相+心","m":"appearance + heart → to think/miss"},"您":{"r":"你+心","m":"you + heart → you (polite)"},"忙":{"r":"心+亡","m":"heart + gone → busy"},"快":{"r":"心+夬","m":"heart + decisive → fast/happy"},"情":{"r":"心+青","m":"heart + green/young → feeling/emotion"},"怕":{"r":"心+白","m":"heart + white → afraid"},"吃":{"r":"口+乞","m":"mouth + beg → to eat"},"喝":{"r":"口+曷","m":"mouth + why → to drink"},"听":{"r":"口+斤","m":"mouth + axe → to listen"},"吗":{"r":"口+马","m":"mouth + horse → question particle"},"呢":{"r":"口+尼","m":"mouth + nun → question particle"},"叫":{"r":"口+丩","m":"mouth + hook → to call"},"唱":{"r":"口+昌","m":"mouth + flourish → to sing"},"哭":{"r":"口+犬","m":"mouths + dog → to cry"},"说":{"r":"言+兑","m":"speech + exchange → to speak"},"话":{"r":"言+舌","m":"speech + tongue → words/speech"},"请":{"r":"言+青","m":"speech + green → please/invite"},"谢":{"r":"言+射","m":"speech + shoot → to thank"},"读":{"r":"言+卖","m":"speech + sell → to read"},"认":{"r":"言+人","m":"speech + person → to recognize"},"课":{"r":"言+果","m":"speech + fruit → class/lesson"},"语":{"r":"言+吾","m":"speech + I → language"},"词":{"r":"言+司","m":"speech + manage → word"},"休":{"r":"人+木","m":"person + tree → to rest"},"做":{"r":"人+故","m":"person + reason → to do"},"住":{"r":"人+主","m":"person + master → to live"},"你":{"r":"人+尔","m":"person + you → you"},"他":{"r":"人+也","m":"person + also → he"},"们":{"r":"人+门","m":"person + door → plural marker"},"什":{"r":"人+十","m":"person + ten → what"},"位":{"r":"人+立","m":"person + stand → seat/position"},"看":{"r":"手+目","m":"hand + eye → to look/see"},"打":{"r":"手+丁","m":"hand + nail → to hit/play"},"找":{"r":"手+戈","m":"hand + weapon → to find"},"拿":{"r":"合+手","m":"together + hand → to take"},"洗":{"r":"水+先","m":"water + first → to wash"},"河":{"r":"水+可","m":"water + can → river"},"海":{"r":"水+每","m":"water + every → sea/ocean"},"汤":{"r":"水+昜","m":"water + rising → soup"},"湖":{"r":"水+胡","m":"water + reckless → lake"},"渴":{"r":"水+曷","m":"water + why → thirsty"},"泪":{"r":"水+目","m":"water + eye → tears"},"游":{"r":"水+斿","m":"water + flag → to swim/travel"},"饭":{"r":"食+反","m":"food + reverse → cooked rice/meal"},"饿":{"r":"食+我","m":"food + I → hungry"},"饱":{"r":"食+包","m":"food + wrap → full (after eating)"},"饮":{"r":"食+欠","m":"food + lacking → to drink"},"猫":{"r":"犬+苗","m":"dog radical + seedling (sound) → cat"},"狗":{"r":"犬+句","m":"dog radical + sentence → dog"},"机":{"r":"木+几","m":"wood + small table → machine"},"林":{"r":"木+木","m":"wood + wood → forest"},"森":{"r":"木+木+木","m":"three trees → dense forest"},"桌":{"r":"卜+日+木","m":"divination + sun + wood → table"},"椅":{"r":"木+奇","m":"wood + strange → chair"},"楼":{"r":"木+娄","m":"wood + trailing → building/floor"},"跑":{"r":"足+包","m":"foot + wrap → to run"},"路":{"r":"足+各","m":"foot + each → road"},"跳":{"r":"足+兆","m":"foot + omen → to jump"},"热":{"r":"执+灬","m":"grasp + fire dots → hot"},"黑":{"r":"里+灬","m":"inside + fire dots → black"},"照":{"r":"昭+灬","m":"bright + fire dots → to shine/photo"},"煮":{"r":"者+灬","m":"person + fire dots → to cook/boil"},"买":{"r":"乛+头","m":"hook + head → to buy"},"卖":{"r":"十+买","m":"ten + buy → to sell"},"男":{"r":"田+力","m":"field + strength → man"},"思":{"r":"田+心","m":"field + heart → to think"},"累":{"r":"田+糸","m":"field + thread → tired"},"茶":{"r":"草+人+木","m":"grass + person + tree → tea"},"药":{"r":"草+约","m":"grass + agreement → medicine"},"菜":{"r":"草+采","m":"grass + pick → vegetable/dish"},"蛋":{"r":"疋+虫","m":"roll + insect → egg"},"笔":{"r":"竹+毛","m":"bamboo + fur → pen/brush"},"笑":{"r":"竹+夭","m":"bamboo + young → to laugh"},"红":{"r":"糸+工","m":"thread + work → red"},"绿":{"r":"糸+录","m":"thread + record → green"},"给":{"r":"糸+合","m":"thread + together → to give"},"经":{"r":"糸+巠","m":"thread + underground river → to pass through"},"雪":{"r":"雨+彐","m":"rain + hand → snow"},"雷":{"r":"雨+田","m":"rain + field → thunder"},"零":{"r":"雨+令","m":"rain + command → zero"},"电":{"r":"雨+乚","m":"rain + hook → electricity"},"鸡":{"r":"又+鸟","m":"again + bird → chicken"},"对":{"r":"又+寸","m":"again + inch → correct"},"难":{"r":"又+隹","m":"again + short-tailed bird → difficult"},"欢":{"r":"又+欠","m":"again + lacking → happy/joyful"},"钱":{"r":"金+戋","m":"metal + small → money"},"铅":{"r":"金+㕣","m":"metal + marsh → lead (metal)"},"银":{"r":"金+艮","m":"metal + blunt → silver"},"饺":{"r":"食+交","m":"food + cross → dumpling"},"校":{"r":"木+交","m":"wood + cross → school"},"教":{"r":"孝+攵","m":"filial piety + strike → to teach"},"数":{"r":"娄+攵","m":"trailing + strike → number/count"},"放":{"r":"方+攵","m":"direction + strike → to put/release"},"问":{"r":"门+口","m":"door + mouth → to ask"},"间":{"r":"门+日","m":"door + sun → between/room"},"闻":{"r":"门+耳","m":"door + ear → to hear/news"},"关":{"r":"丷+天","m":"eight + heaven → to close"},"安":{"r":"宀+女","m":"roof + woman → peaceful/safe"},"家":{"r":"宀+豕","m":"roof + pig → home/family"},"字":{"r":"宀+子","m":"roof + child → character/word"},"客":{"r":"宀+各","m":"roof + each → guest"},"空":{"r":"穴+工","m":"cave + work → empty/sky"},"穿":{"r":"穴+牙","m":"cave + tooth → to wear/penetrate"},"病":{"r":"疒+丙","m":"sickness + third → sick/illness"},"疼":{"r":"疒+冬","m":"sickness + winter → painful"},"起":{"r":"走+己","m":"walk + self → to get up/start"},"越":{"r":"走+戉","m":"walk + axe → to exceed"},"远":{"r":"辶+元","m":"walk + origin → far"},"近":{"r":"辶+斤","m":"walk + axe → near"},"还":{"r":"辶+不","m":"walk + not → still/return"},"过":{"r":"辶+寸","m":"walk + inch → to pass"},"进":{"r":"辶+井","m":"walk + well → to enter"},"送":{"r":"辶+关","m":"walk + close → to send/deliver"},"选":{"r":"辶+先","m":"walk + first → to choose"},"道":{"r":"辶+首","m":"walk + head → road/way/principle"},"连":{"r":"辶+车","m":"walk + vehicle → to connect"}};
+
+function getRadicalInfo(char) {
+  // For single characters, look up directly
+  if (char.length === 1) {
+    const r = RADICALS[char];
+    if (!r) return null;
+    if (typeof r === 'string') return { type: 'radical', meaning: r };
+    return { type: 'compound', parts: r.r, meaning: r.m };
+  }
+  // For multi-char words, get info for each character
+  const results = [];
+  for (const ch of char) {
+    const r = RADICALS[ch];
+    if (r) {
+      if (typeof r === 'string') results.push({ char: ch, type: 'radical', meaning: r });
+      else results.push({ char: ch, type: 'compound', parts: r.r, meaning: r.m });
+    }
+  }
+  return results.length ? results : null;
+}
+
+function getRelatedWords(char) {
+  // Find words in DICT that share characters with the input
+  const chars = new Set(char.split(''));
+  const related = DICT.filter(e => {
+    if (e.s === char) return false; // skip self
+    for (const ch of chars) { if (e.s.includes(ch)) return true; }
+    return false;
+  });
+  // Sort: exact character matches first, then by HSK level
+  related.sort((a, b) => {
+    const aShares = [...chars].filter(c => a.s.includes(c)).length;
+    const bShares = [...chars].filter(c => b.s.includes(c)).length;
+    if (bShares !== aShares) return bShares - aShares;
+    return (a.h || 9) - (b.h || 9);
+  });
+  return related.slice(0, 6);
+}
+
+function renderRadicalHTML(char) {
+  const info = getRadicalInfo(char);
+  if (!info) return '';
+  let html = '<div class="radical-section">';
+  html += '<div class="flex items-center gap-1.5 mb-1.5"><svg class="w-3 h-3 text-ink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm0 8a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zm12 0a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg><span class="text-xs font-medium text-ink-500 uppercase tracking-wide">Radicals</span></div>';
+
+  if (Array.isArray(info)) {
+    // Multi-character word
+    info.forEach(i => {
+      if (i.type === 'radical') {
+        html += `<div class="text-xs text-ink-400 ml-5"><span class="font-chinese text-sm text-ink-600">${i.char}</span> — radical: ${i.meaning}</div>`;
+      } else {
+        html += `<div class="text-xs text-ink-400 ml-5"><span class="font-chinese text-sm text-ink-600">${i.char}</span> = <span class="font-chinese">${i.parts}</span> <span class="text-ink-300">→</span> ${i.meaning}</div>`;
+      }
+    });
+  } else if (info.type === 'radical') {
+    html += `<div class="text-xs text-ink-400 ml-5">This is a radical meaning <strong>${info.meaning}</strong></div>`;
+  } else {
+    html += `<div class="text-xs text-ink-400 ml-5"><span class="font-chinese">${info.parts}</span> <span class="text-ink-300">→</span> ${info.meaning}</div>`;
+  }
+  html += '</div>';
+  return html;
+}
+
+function renderRelatedHTML(char) {
+  const related = getRelatedWords(char);
+  if (!related.length) return '';
+  let html = '<div class="related-section mt-1.5">';
+  html += '<div class="flex items-center gap-1.5 mb-1.5"><svg class="w-3 h-3 text-ink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg><span class="text-xs font-medium text-ink-500 uppercase tracking-wide">Related</span></div>';
+  html += '<div class="flex flex-wrap gap-1.5 ml-5">';
+  related.forEach(r => {
+    html += `<span class="inline-flex items-center gap-1 bg-ink-50 border border-ink-200/50 rounded-lg px-2 py-0.5 text-xs cursor-pointer hover:border-vermillion/30 hover:bg-vermillion/5 transition-all" onclick="event.stopPropagation();document.getElementById('input-chinese').value='${r.s}';document.getElementById('lookup-btn').click()"><span class="font-chinese text-sm text-ink-700">${r.s}</span><span class="text-ink-400">${r.p}</span></span>`;
+  });
+  html += '</div></div>';
+  return html;
+}
+
 
 // ═══ TTS (smart voice selection) ═══
 let cachedVoice = null;
@@ -253,6 +336,7 @@ const inputChinese=$('input-chinese'),inputPinyin=$('input-pinyin'),inputEnglish
 const lookupBtn=$('lookup-btn'),lookupStatus=$('lookup-status');
 const resultsSelector=$('results-selector'),resultsList=$('results-list');
 const examplesPreview=$('examples-preview'),examplesContent=$('examples-content');
+const radicalPreview=$('radical-preview'),radicalContent=$('radical-content');
 const fieldsRow=$('fields-row'),addBtnRow=$('add-btn-row');
 const addBtn=$('add-btn'),manualToggle=$('manual-toggle');
 const grid=$('cards-grid'),emptyState=$('empty-state');
@@ -311,9 +395,19 @@ function showMF(p,e,h,t,examples){
   inputPinyin.classList.toggle('field-auto-filled',!!p);inputEnglish.classList.toggle('field-auto-filled',!!e);
   pendingHSK=h||0;pendingPOS=t||'other';pendingExamples=examples||[];
   showExamples(pendingExamples);
+  // Show radicals & related words
+  const ch = inputChinese.value.trim();
+  const radHtml = renderRadicalHTML(ch);
+  const relHtml = renderRelatedHTML(ch);
+  if (radHtml || relHtml) {
+    radicalPreview.classList.remove('hidden');
+    radicalContent.innerHTML = radHtml + relHtml;
+  } else {
+    radicalPreview.classList.add('hidden');
+  }
 }
 
-function resetForm(){inputChinese.value='';inputPinyin.value='';inputEnglish.value='';lookupStatus.classList.add('hidden');resultsSelector.classList.add('hidden');fieldsRow.classList.add('hidden');addBtnRow.classList.add('hidden');examplesPreview.classList.add('hidden');inputPinyin.classList.remove('field-auto-filled');inputEnglish.classList.remove('field-auto-filled');pendingHSK=0;pendingPOS='';pendingExamples=[];inputChinese.focus();}
+function resetForm(){inputChinese.value='';inputPinyin.value='';inputEnglish.value='';lookupStatus.classList.add('hidden');resultsSelector.classList.add('hidden');fieldsRow.classList.add('hidden');addBtnRow.classList.add('hidden');examplesPreview.classList.add('hidden');radicalPreview.classList.add('hidden');inputPinyin.classList.remove('field-auto-filled');inputEnglish.classList.remove('field-auto-filled');pendingHSK=0;pendingPOS='';pendingExamples=[];inputChinese.focus();}
 
 function getFilteredCards(){return cards.filter(c=>{if(activeHSK!=='all'&&c.hsk!==parseInt(activeHSK))return false;if(activePOS!=='all'){if(activePOS==='other')return!['verb','noun','adj','adv'].includes(c.pos);if(c.pos!==activePOS)return false;}return true;});}
 
@@ -348,6 +442,24 @@ function mkCard(card,idx,anim){
     exHtml+='</div>';
   }
 
+  // Radical breakdown for card back (dark themed)
+  let radBackHtml='';
+  const radInfo=getRadicalInfo(card.chinese);
+  if(radInfo){
+    radBackHtml='<div class="w-full px-2 mt-1.5 pt-1.5 border-t border-ink-700/50"><div class="text-xs text-ink-400">';
+    if(Array.isArray(radInfo)){
+      radInfo.forEach(i=>{
+        if(i.type==='compound') radBackHtml+=`<span class="font-chinese text-ink-300">${i.char}</span> <span class="font-chinese text-ink-400">${i.parts}</span> <span class="text-ink-500">${i.meaning}</span> `;
+        else radBackHtml+=`<span class="font-chinese text-ink-300">${i.char}</span> <span class="text-ink-500">(${i.meaning})</span> `;
+      });
+    } else if(radInfo.type==='compound'){
+      radBackHtml+=`<span class="font-chinese text-ink-300">${radInfo.parts}</span> <span class="text-ink-500">${radInfo.meaning}</span>`;
+    } else {
+      radBackHtml+=`<span class="text-ink-500">Radical: ${radInfo.meaning}</span>`;
+    }
+    radBackHtml+='</div></div>';
+  }
+
   w.innerHTML=`<div class="flashcard relative ${cardHeight}" data-id="${card.id}"><div class="flashcard-inner">
     <div class="flashcard-front bg-white border border-ink-200/50 shadow-sm flex flex-col items-center justify-center p-6 select-none overflow-hidden rounded-2xl">
       ${hasImg?`<img src="${imgUrl}" alt="" class="absolute inset-0 w-full h-full object-cover opacity-[0.13] pointer-events-none" loading="lazy" onerror="this.style.display='none'">`:''}
@@ -363,6 +475,7 @@ function mkCard(card,idx,anim){
       <div class="mt-2 flex items-center gap-1.5 text-ink-400 text-xs relative z-10"><span class="font-chinese">${esc(card.chinese)}</span><span>\u00b7</span><span>${esc(card.pinyin)}</span></div>
       <div class="mt-1.5 flex items-center gap-1.5 relative z-10">${hl?`<span class="hsk-badge ${hc}">${esc(hl)}</span>`:''} ${pl?`<span class="pos-badge">${esc(pl)}</span>`:''}</div>
       ${exHtml}
+      ${radBackHtml}
     </div>
   </div>
   <button class="delete-btn absolute top-2 right-12 z-10 w-7 h-7 rounded-full bg-ink-800/60 hover:bg-vermillion text-ink-200 hover:text-white flex items-center justify-center transition-all backdrop-blur-sm" data-delete-id="${card.id}" title="Delete"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button></div>`;
