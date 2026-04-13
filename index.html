@@ -75,6 +75,11 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:#c4463a!import
 .hsk-3{background:rgba(245,158,11,.1);color:#d97706}
 .hsk-4{background:rgba(196,70,58,.1);color:#9e342a}
 .pos-badge{font-size:.5625rem;font-weight:600;letter-spacing:.02em;padding:.125rem .375rem;border-radius:.25rem;background:rgba(181,172,153,.12);color:#7a6f5a}
+/* Tab view buttons */
+.tab-view-btn{cursor:pointer;border:none}
+/* Quiz feedback */
+.quiz-correct{background:rgba(74,140,111,.08);border:1px solid rgba(74,140,111,.2)}
+.quiz-wrong{background:rgba(196,70,58,.06);border:1px solid rgba(196,70,58,.15)}
 /* Audio button */
 .audio-btn{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;border:none;flex-shrink:0}
 .audio-btn.front-audio{background:rgba(196,70,58,.08);color:#c4463a}
@@ -139,6 +144,16 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:#c4463a!import
       </div>
     </div>
   </section>
+  <!-- View tabs -->
+  <div class="flex justify-center mb-8 fade-in" style="animation-delay:.15s">
+    <div class="flex bg-ink-100 p-1 rounded-lg gap-1">
+      <button id="tab-cards" class="tab-view-btn px-5 py-2 rounded-md text-sm font-medium bg-ink-800 text-ink-100 transition-all">Cards</button>
+      <button id="tab-quiz" class="tab-view-btn px-5 py-2 rounded-md text-sm font-medium text-ink-500 hover:text-ink-700 transition-all">Quiz</button>
+    </div>
+  </div>
+
+  <!-- Cards View -->
+  <div id="view-cards">
   <div class="flex flex-col gap-4 mb-6 fade-in" style="animation-delay:.2s">
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-3"><h2 class="font-display text-xl text-ink-700">Your Cards</h2><span id="card-count" class="counter-badge text-white text-xs font-semibold px-2.5 py-0.5 rounded-full min-w-[28px] text-center hidden">0</span></div>
@@ -169,6 +184,84 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:#c4463a!import
     <div class="gentle-pulse mb-5"><span class="font-chinese text-6xl text-ink-200">字</span></div>
     <p class="text-ink-400 font-display text-lg italic mb-1">No cards yet</p>
     <p class="text-ink-300 text-sm">Search in Chinese or English above to get started.</p>
+  </div>
+  </div>
+
+  <!-- Quiz View -->
+  <div id="view-quiz" class="hidden">
+    <div class="max-w-lg mx-auto">
+      <!-- Quiz not started / needs cards -->
+      <div id="quiz-empty" class="text-center py-16">
+        <div class="gentle-pulse mb-5"><span class="font-chinese text-6xl text-ink-200">考</span></div>
+        <p class="text-ink-400 font-display text-lg italic mb-1">Add some cards first</p>
+        <p class="text-ink-300 text-sm">You need at least 3 cards to start a quiz.</p>
+      </div>
+
+      <!-- Quiz setup -->
+      <div id="quiz-setup" class="hidden text-center py-8">
+        <h2 class="font-display text-2xl text-ink-700 mb-2">Quiz Mode</h2>
+        <p class="text-ink-400 text-sm mb-6">Test your active recall &mdash; type the pinyin or character for each word.</p>
+        <div class="bg-white/70 border border-ink-200/60 rounded-2xl p-5 mb-6 text-left">
+          <label class="block text-xs font-medium text-ink-500 mb-2 uppercase tracking-wide">Number of questions</label>
+          <div class="flex gap-2">
+            <button class="quiz-count-btn filter-chip active" data-count="5">5</button>
+            <button class="quiz-count-btn filter-chip" data-count="10">10</button>
+            <button class="quiz-count-btn filter-chip" data-count="20">20</button>
+            <button class="quiz-count-btn filter-chip" data-count="all">All</button>
+          </div>
+        </div>
+        <button id="quiz-start-btn" class="bg-vermillion hover:bg-vermillion-dark text-white px-8 py-3 rounded-xl text-sm font-medium transition-all hover:shadow-md active:scale-[0.97]">Start Quiz</button>
+      </div>
+
+      <!-- Active quiz -->
+      <div id="quiz-active" class="hidden">
+        <!-- Progress bar -->
+        <div class="flex items-center gap-3 mb-6">
+          <div class="flex-1 h-2 bg-ink-100 rounded-full overflow-hidden">
+            <div id="quiz-progress-bar" class="h-full bg-vermillion rounded-full transition-all duration-500" style="width:0%"></div>
+          </div>
+          <span id="quiz-progress-text" class="text-ink-400 text-xs font-medium whitespace-nowrap">1 / 5</span>
+        </div>
+
+        <!-- Question card -->
+        <div class="bg-white/70 border border-ink-200/60 rounded-2xl p-6 sm:p-8 shadow-sm text-center mb-5">
+          <p class="text-ink-400 text-xs uppercase tracking-wide mb-4">What is the pinyin or character for:</p>
+          <p id="quiz-english" class="font-display text-2xl sm:text-3xl text-ink-800 italic mb-2"></p>
+          <div id="quiz-hsk-badge" class="mb-5"></div>
+          <button id="quiz-listen-btn" onclick="speak(quizCurrentCard?.chinese||'')" class="audio-btn front-audio mx-auto mb-5" title="Listen to pronunciation">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
+          </button>
+          <div class="flex gap-2 max-w-xs mx-auto">
+            <input type="text" id="quiz-input" placeholder="Type pinyin or character..." class="flex-1 px-4 py-3 bg-ink-50 border border-ink-200 rounded-xl text-ink-800 text-center text-lg placeholder:text-ink-300 placeholder:text-sm transition-all" autocomplete="off" autocapitalize="off" spellcheck="false">
+            <button id="quiz-submit-btn" class="bg-ink-800 hover:bg-ink-900 text-ink-100 px-5 py-3 rounded-xl text-sm font-medium transition-all">Check</button>
+          </div>
+        </div>
+
+        <!-- Feedback -->
+        <div id="quiz-feedback" class="hidden rounded-2xl p-5 text-center mb-4">
+          <p id="quiz-feedback-icon" class="text-3xl mb-2"></p>
+          <p id="quiz-feedback-text" class="text-sm font-medium mb-2"></p>
+          <div id="quiz-feedback-detail" class="text-sm"></div>
+          <button id="quiz-next-btn" class="mt-4 bg-ink-800 hover:bg-ink-900 text-ink-100 px-6 py-2.5 rounded-xl text-sm font-medium transition-all">Next</button>
+        </div>
+      </div>
+
+      <!-- Quiz results -->
+      <div id="quiz-results" class="hidden text-center py-8">
+        <div class="text-5xl mb-4" id="quiz-results-emoji"></div>
+        <h2 class="font-display text-2xl text-ink-700 mb-1" id="quiz-results-title"></h2>
+        <p class="text-ink-400 text-sm mb-6" id="quiz-results-subtitle"></p>
+        <div class="bg-white/70 border border-ink-200/60 rounded-2xl p-6 mb-6">
+          <div class="grid grid-cols-3 gap-4 text-center">
+            <div><p class="text-2xl font-bold text-ink-800" id="quiz-stat-total">0</p><p class="text-xs text-ink-400">Questions</p></div>
+            <div><p class="text-2xl font-bold text-jade" id="quiz-stat-correct">0</p><p class="text-xs text-ink-400">Correct</p></div>
+            <div><p class="text-2xl font-bold text-vermillion" id="quiz-stat-wrong">0</p><p class="text-xs text-ink-400">Wrong</p></div>
+          </div>
+        </div>
+        <div id="quiz-results-list" class="text-left space-y-2 mb-6"></div>
+        <button id="quiz-restart-btn" class="bg-vermillion hover:bg-vermillion-dark text-white px-8 py-3 rounded-xl text-sm font-medium transition-all hover:shadow-md">Try Again</button>
+      </div>
+    </div>
   </div>
 </div>
 <script>
@@ -528,6 +621,123 @@ shuffleBtn.addEventListener('click',shuffleCards);
 $('signin-btn').addEventListener('click',signIn);
 $('signout-btn').addEventListener('click',signOut);
 document.querySelectorAll('.filter-chip').forEach(chip=>{chip.addEventListener('click',()=>{const ft=chip.dataset.filter,v=chip.dataset.value;document.querySelectorAll(`.filter-chip[data-filter="${ft}"]`).forEach(c=>c.classList.remove('active'));chip.classList.add('active');if(ft==='hsk')activeHSK=v;else if(ft==='pos')activePOS=v;renderCards(true);});});
+
+// ═══ TABS ═══
+const tabCards=$('tab-cards'), tabQuiz=$('tab-quiz');
+const viewCards=$('view-cards'), viewQuiz=$('view-quiz');
+
+function switchTab(tab) {
+  if (tab==='cards') {
+    tabCards.classList.add('bg-ink-800','text-ink-100'); tabCards.classList.remove('text-ink-500');
+    tabQuiz.classList.remove('bg-ink-800','text-ink-100'); tabQuiz.classList.add('text-ink-500');
+    viewCards.classList.remove('hidden'); viewQuiz.classList.add('hidden');
+  } else {
+    tabQuiz.classList.add('bg-ink-800','text-ink-100'); tabQuiz.classList.remove('text-ink-500');
+    tabCards.classList.remove('bg-ink-800','text-ink-100'); tabCards.classList.add('text-ink-500');
+    viewQuiz.classList.remove('hidden'); viewCards.classList.add('hidden');
+    initQuizView();
+  }
+}
+tabCards.addEventListener('click',()=>switchTab('cards'));
+tabQuiz.addEventListener('click',()=>switchTab('quiz'));
+
+// ═══ QUIZ ═══
+let quizQuestions=[], quizIndex=0, quizResults=[], quizCount=5;
+let quizCurrentCard=null;
+
+function initQuizView() {
+  const qe=$('quiz-empty'), qs=$('quiz-setup'), qa=$('quiz-active'), qr=$('quiz-results');
+  qa.classList.add('hidden'); qr.classList.add('hidden');
+  if (cards.length < 3) { qe.classList.remove('hidden'); qs.classList.add('hidden'); }
+  else { qe.classList.add('hidden'); qs.classList.remove('hidden'); }
+}
+
+document.querySelectorAll('.quiz-count-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.quiz-count-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    quizCount = btn.dataset.count === 'all' ? cards.length : parseInt(btn.dataset.count);
+  });
+});
+
+function startQuiz() {
+  const shuffled = [...cards].sort(() => Math.random() - 0.5);
+  quizQuestions = shuffled.slice(0, Math.min(quizCount, shuffled.length));
+  quizIndex = 0; quizResults = [];
+  $('quiz-setup').classList.add('hidden');
+  $('quiz-active').classList.remove('hidden');
+  $('quiz-results').classList.add('hidden');
+  showQuizQuestion();
+}
+
+function showQuizQuestion() {
+  const card = quizQuestions[quizIndex];
+  quizCurrentCard = card;
+  const total = quizQuestions.length;
+  $('quiz-progress-bar').style.width = `${(quizIndex/total)*100}%`;
+  $('quiz-progress-text').textContent = `${quizIndex+1} / ${total}`;
+  $('quiz-english').textContent = card.english.split(';')[0].replace(/^to /,'').trim();
+  $('quiz-hsk-badge').innerHTML = card.hsk ? `<span class="hsk-badge hsk-${card.hsk}">${HSK_LABELS[card.hsk]||''}</span> <span class="pos-badge">${POS_LABELS[card.pos]||''}</span>` : '';
+  const input = $('quiz-input');
+  input.value = ''; input.disabled = false; input.focus();
+  input.classList.remove('field-auto-filled'); input.style.borderColor=''; input.style.background='';
+  $('quiz-feedback').classList.add('hidden');
+  $('quiz-submit-btn').classList.remove('hidden');
+}
+
+function checkQuizAnswer() {
+  const card = quizQuestions[quizIndex];
+  const input = $('quiz-input');
+  const answer = input.value.trim();
+  if (!answer) return;
+  input.disabled = true;
+  $('quiz-submit-btn').classList.add('hidden');
+  const ansNorm = stripTones(answer);
+  const pinyinNorm = stripTones(card.pinyin);
+  const correct = answer === card.chinese || ansNorm === pinyinNorm;
+  quizResults.push({ card, answer, correct });
+  const fb = $('quiz-feedback');
+  fb.classList.remove('hidden','quiz-correct','quiz-wrong');
+  fb.classList.add(correct ? 'quiz-correct' : 'quiz-wrong');
+  $('quiz-feedback-icon').textContent = correct ? '\u2705' : '\u274c';
+  $('quiz-feedback-text').textContent = correct ? 'Correct!' : 'Not quite';
+  $('quiz-feedback-text').className = `text-sm font-medium mb-2 ${correct?'text-jade-dark':'text-vermillion'}`;
+  $('quiz-feedback-detail').innerHTML = `<span class="font-chinese text-2xl text-ink-800">${esc(card.chinese)}</span> <span class="text-ink-400 text-sm ml-2">${esc(card.pinyin)}</span> <span class="text-ink-300 mx-1">\u2014</span> <span class="text-ink-600 text-sm">${esc(card.english)}</span>`;
+  if (correct) input.classList.add('field-auto-filled');
+  else { input.style.borderColor='#c4463a'; input.style.background='rgba(196,70,58,0.04)'; }
+  $('quiz-next-btn').textContent = quizIndex >= quizQuestions.length - 1 ? 'See Results' : 'Next';
+}
+
+function nextQuizQuestion() {
+  quizIndex++;
+  if (quizIndex >= quizQuestions.length) showQuizResults();
+  else showQuizQuestion();
+}
+
+function showQuizResults() {
+  $('quiz-active').classList.add('hidden');
+  $('quiz-results').classList.remove('hidden');
+  $('quiz-progress-bar').style.width = '100%';
+  const total = quizResults.length, correct = quizResults.filter(r=>r.correct).length, pct = Math.round((correct/total)*100);
+  $('quiz-stat-total').textContent = total;
+  $('quiz-stat-correct').textContent = correct;
+  $('quiz-stat-wrong').textContent = total - correct;
+  let emoji, title, subtitle;
+  if (pct===100){emoji='\ud83c\udf89';title='Perfect!';subtitle='You nailed every single one.';}
+  else if(pct>=80){emoji='\ud83d\ude0e';title='Great job!';subtitle=`${pct}% correct \u2014 almost there!`;}
+  else if(pct>=50){emoji='\ud83d\udcaa';title='Good effort!';subtitle=`${pct}% correct \u2014 keep practicing!`;}
+  else{emoji='\ud83d\udcd6';title='Keep going!';subtitle=`${pct}% correct \u2014 review and try again.`;}
+  $('quiz-results-emoji').textContent=emoji; $('quiz-results-title').textContent=title; $('quiz-results-subtitle').textContent=subtitle;
+  $('quiz-results-list').innerHTML = quizResults.map(r=>`<div class="flex items-center gap-3 ${r.correct?'quiz-correct':'quiz-wrong'} rounded-xl px-4 py-2.5"><span class="text-base">${r.correct?'\u2705':'\u274c'}</span><span class="font-chinese text-lg text-ink-800">${esc(r.card.chinese)}</span><span class="text-ink-400 text-sm">${esc(r.card.pinyin)}</span><span class="text-ink-300 hidden sm:inline">\u2014</span><span class="text-ink-600 text-sm flex-1">${esc(r.card.english.split(';')[0])}</span>${!r.correct?`<span class="text-vermillion text-xs">You: ${esc(r.answer)}</span>`:''}</div>`).join('');
+}
+
+$('quiz-start-btn').addEventListener('click', startQuiz);
+$('quiz-submit-btn').addEventListener('click', checkQuizAnswer);
+$('quiz-next-btn').addEventListener('click', nextQuizQuestion);
+$('quiz-restart-btn').addEventListener('click', ()=>initQuizView());
+$('quiz-input').addEventListener('keydown', e=>{
+  if(e.key==='Enter'){e.preventDefault();if(!$('quiz-input').disabled)checkQuizAnswer();else nextQuizQuestion();}
+});
 
 renderCards(true);
 if(initFB(FIREBASE_CONFIG))setupAuth();
