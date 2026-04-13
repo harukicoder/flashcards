@@ -177,13 +177,32 @@ const DICT = [{"s":"爱","p":"ài","e":"love; to love","h":1,"t":"verb","x":[{"c
 const exactIndex=new Map(),partialIndex=new Map();
 DICT.forEach(e=>{if(!exactIndex.has(e.s))exactIndex.set(e.s,[]);exactIndex.get(e.s).push(e);for(const ch of e.s){if(!partialIndex.has(ch))partialIndex.set(ch,[]);partialIndex.get(ch).push(e);}});
 
+// Strip tone marks from pinyin for fuzzy matching
+function stripTones(s){
+  return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\u0304|\u0301|\u030C|\u0300/g,'')
+    .replace(/[āáǎà]/gi,'a').replace(/[ēéěè]/gi,'e').replace(/[īíǐì]/gi,'i')
+    .replace(/[ōóǒò]/gi,'o').replace(/[ūúǔù]/gi,'u').replace(/[ǖǘǚǜ]/gi,'v')
+    .toLowerCase().replace(/\s/g,'');
+}
+
 function lookupDict(q){
   q=q.trim();if(!q)return[];
   const ex=exactIndex.get(q);if(ex&&ex.length)return ex.map(e=>({...e}));
   const sw=DICT.filter(e=>e.s.startsWith(q));if(sw.length)return sw.slice(0,10).map(e=>({...e}));
   if(q.length===1){const c=partialIndex.get(q);if(c&&c.length)return c.slice(0,10).map(e=>({...e}));}
-  const bp=DICT.filter(e=>e.p.toLowerCase().replace(/\s/g,'').includes(q.toLowerCase().replace(/\s/g,'')));
-  if(bp.length)return bp.slice(0,10).map(e=>({...e}));
+  // Pinyin match: strip tones and spaces for both query and dictionary
+  const qp=stripTones(q);
+  const bp=DICT.filter(e=>stripTones(e.p).includes(qp));
+  if(bp.length){
+    // Sort: exact pinyin matches first, then starts-with, then contains
+    bp.sort((a,b)=>{
+      const ap=stripTones(a.p), bpp=stripTones(b.p);
+      if(ap===qp&&bpp!==qp)return -1; if(bpp===qp&&ap!==qp)return 1;
+      if(ap.startsWith(qp)&&!bpp.startsWith(qp))return -1; if(bpp.startsWith(qp)&&!ap.startsWith(qp))return 1;
+      return 0;
+    });
+    return bp.slice(0,10).map(e=>({...e}));
+  }
   const be=DICT.filter(e=>e.e.toLowerCase().includes(q.toLowerCase()));
   if(be.length)return be.slice(0,10).map(e=>({...e}));
   return[];
