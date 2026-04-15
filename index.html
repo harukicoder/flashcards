@@ -599,7 +599,11 @@ function mkCard(card,idx,anim){
 }
 
 function addCard(ch,py,en,hsk,pos,examples){
-  const card={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),chinese:ch.trim(),pinyin:py.trim(),english:en.trim(),hsk:hsk||0,pos:pos||'other',examples:examples||[],created:Date.now()};
+  const chinese=ch.trim();
+  // Check for duplicate
+  const existing=cards.find(c=>c.chinese===chinese);
+  if(existing){showToast(`\u201c${chinese}\u201d is already in your cards`,'error');return;}
+  const card={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),chinese:chinese,pinyin:py.trim(),english:en.trim(),hsk:hsk||0,pos:pos||'other',examples:examples||[],created:Date.now()};
   cards.unshift(card);saveCards(cards);renderCards(false);
   const f=grid.firstElementChild;if(f){f.style.opacity='0';f.classList.add('card-enter');}
   showToast(`\u201c${card.chinese}\u201d added`,'success');
