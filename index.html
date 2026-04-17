@@ -48,6 +48,10 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:#c4463a!import
 .gentle-pulse{animation:gentlePulse 3s ease-in-out infinite}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);opacity:0;transition:all .4s cubic-bezier(.22,1,.36,1);z-index:100;pointer-events:none}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast-default{background:#3d3630;color:#f3f1ec;padding:.75rem 1.25rem;border-radius:.75rem;font-size:.875rem;font-weight:500;box-shadow:0 10px 25px -5px rgba(0,0,0,.15);display:flex;align-items:center;gap:.5rem}
+.toast-warning{background:linear-gradient(135deg,#c4463a,#9e342a);color:white;padding:1rem 1.75rem;border-radius:1rem;font-size:1rem;font-weight:600;box-shadow:0 20px 40px -10px rgba(196,70,58,.4),0 0 0 4px rgba(196,70,58,.15);display:flex;align-items:center;gap:.75rem;animation:warningPulse .5s ease-out}
+@keyframes warningPulse{0%{transform:scale(.9)}50%{transform:scale(1.05)}100%{transform:scale(1)}}
+.toast-warning #toast-icon{font-size:1.5rem;font-weight:700}
 .counter-badge{background:linear-gradient(135deg,#c4463a,#9e342a)}
 .field-auto-filled{background-color:rgba(74,140,111,.06)!important;border-color:rgba(74,140,111,.3)!important}
 .result-option{cursor:pointer;transition:all .15s ease}
@@ -94,7 +98,7 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:#c4463a!import
 </style>
 </head>
 <body class="relative z-10">
-<div id="toast" class="toast"><div class="bg-ink-800 text-ink-100 px-5 py-3 rounded-xl text-sm font-medium shadow-lg flex items-center gap-2"><span id="toast-icon"></span><span id="toast-text"></span></div></div>
+<div id="toast" class="toast"><div id="toast-inner" class="bg-ink-800 text-ink-100 px-5 py-3 rounded-xl text-sm font-medium shadow-lg flex items-center gap-2"><span id="toast-icon"></span><span id="toast-text"></span></div></div>
 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
   <div class="flex items-center justify-between mb-6 fade-in">
     <div id="sync-status"><span class="sync-badge local"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>Local only</span></div>
@@ -457,7 +461,21 @@ const toastEl=$('toast'),toastIcon=$('toast-icon'),toastText=$('toast-text');
 const filterBar=$('filter-bar'),filterCount=$('filter-count');
 
 let toastTimer=null;
-function showToast(t,type='success'){clearTimeout(toastTimer);toastIcon.textContent={success:'\u2713',delete:'\u2715',info:'\u21bb',error:'!'}[type]||'\u2713';toastText.textContent=t;toastEl.classList.add('show');toastTimer=setTimeout(()=>toastEl.classList.remove('show'),2400);}
+function showToast(t,type='success'){
+  clearTimeout(toastTimer);
+  const inner=$('toast-inner');
+  toastIcon.textContent={success:'\u2713',delete:'\u2715',info:'\u21bb',error:'\u26a0',warning:'\u26a0'}[type]||'\u2713';
+  toastText.textContent=t;
+  // Apply styling: prominent warning for error/warning, subtle for others
+  if(type==='error'||type==='warning'){
+    inner.className='toast-warning';
+  } else {
+    inner.className='toast-default';
+  }
+  toastEl.classList.add('show');
+  const duration=(type==='error'||type==='warning')?3800:2400;
+  toastTimer=setTimeout(()=>toastEl.classList.remove('show'),duration);
+}
 
 function showStatus(msg,type){lookupStatus.classList.remove('hidden');const c={success:'text-jade-dark',warning:'text-vermillion',error:'text-vermillion','not-found':'text-ink-500'};const ic={success:'<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>',warning:'<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>','not-found':'<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>'};ic.error=ic.warning;lookupStatus.innerHTML=`<div class="flex items-center gap-2 ${c[type]||'text-ink-500'} text-sm py-1"><svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">${ic[type]||ic['not-found']}</svg><span>${msg}</span></div>`;}
 
@@ -478,12 +496,53 @@ function showExamples(examples) {
   `).join('');
 }
 
+// Segment a Chinese phrase into known words from the dictionary (greedy longest-match)
+function segmentPhrase(phrase){
+  const segments=[];
+  let i=0;
+  while(i<phrase.length){
+    let matched=null;
+    // Try longest match first (up to 4 chars)
+    for(let len=Math.min(4,phrase.length-i);len>=1;len--){
+      const sub=phrase.slice(i,i+len);
+      const entries=exactIndex.get(sub);
+      if(entries&&entries.length){ matched={s:sub,p:entries[0].p,e:entries[0].e,len:len}; break; }
+    }
+    if(matched){segments.push(matched);i+=matched.len;}
+    else{segments.push({s:phrase[i],p:'',e:'',len:1});i++;}
+  }
+  return segments;
+}
+
+function buildPhrasePinyin(phrase){
+  const segs=segmentPhrase(phrase);
+  const parts=segs.filter(s=>s.p).map(s=>s.p.toLowerCase());
+  return parts.join(' ');
+}
+
 function performLookup(){
   const q=inputChinese.value.trim();
   if(!q){showStatus('Type a Chinese character, English word, or pinyin.','warning');return;}
   resultsSelector.classList.add('hidden');fieldsRow.classList.add('hidden');addBtnRow.classList.add('hidden');examplesPreview.classList.add('hidden');
   const isChinese=/[\u4e00-\u9fff]/.test(q);const res=lookupDict(q);
-  if(!res.length){const label=isChinese?`<span class="font-chinese">${esc(q)}</span>`:`"${esc(q)}"`;showStatus(`No match for ${label}. Fill in manually.`,'not-found');if(isChinese)showMF('','','','',[]); else{inputChinese.value='';showMF('','','','',[]);}return;}
+  if(!res.length){
+    const label=isChinese?`<span class="font-chinese">${esc(q)}</span>`:`"${esc(q)}"`;
+    // For Chinese phrases (2+ chars), try to auto-build pinyin from known characters
+    if(isChinese&&q.length>=2){
+      const segs=segmentPhrase(q);
+      const autoPinyin=buildPhrasePinyin(q);
+      const knownCount=segs.filter(s=>s.p).length;
+      if(knownCount>0){
+        const breakdown=segs.map(s=>s.p?`<span class="font-chinese text-ink-700">${esc(s.s)}</span><span class="text-ink-400 text-xs ml-0.5">(${esc(s.p)})</span>`:`<span class="font-chinese text-ink-500">${esc(s.s)}</span>`).join(' ');
+            showStatus(`Custom phrase ${label} &mdash; ${breakdown}. Review pinyin and add your English translation.`,'success');
+        showMF(autoPinyin,'',0,'expr',[]);
+        return;
+      }
+    }
+    showStatus(`No match for ${label}. Fill in manually.`,'not-found');
+    if(isChinese)showMF('','',0,'other',[]); else{inputChinese.value='';showMF('','',0,'other',[]);}
+    return;
+  }
   const ex=res.filter(r=>r.s===q);
   if(isChinese&&ex.length===1){showStatus(`<span class="font-chinese font-bold">${esc(q)}</span> \u2192 ${esc(ex[0].p)} <span class="hsk-badge hsk-${ex[0].h}">${HSK_LABELS[ex[0].h]}</span> <span class="pos-badge">${POS_LABELS[ex[0].t]||ex[0].t}</span>`,'success');showMF(ex[0].p,ex[0].e,ex[0].h,ex[0].t,ex[0].x);
   }else if(isChinese&&ex.length>1){showStatus(`Found ${ex.length} definitions for <span class="font-chinese font-bold">${esc(q)}</span>:`,'success');showRP(ex);
@@ -602,7 +661,7 @@ function addCard(ch,py,en,hsk,pos,examples){
   const chinese=ch.trim();
   // Check for duplicate
   const existing=cards.find(c=>c.chinese===chinese);
-  if(existing){showToast(`\u201c${chinese}\u201d is already in your cards`,'error');return;}
+  if(existing){showToast(`\u201c${chinese}\u201d is already in your flashcards`,'error');return;}
   const card={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),chinese:chinese,pinyin:py.trim(),english:en.trim(),hsk:hsk||0,pos:pos||'other',examples:examples||[],created:Date.now()};
   cards.unshift(card);saveCards(cards);renderCards(false);
   const f=grid.firstElementChild;if(f){f.style.opacity='0';f.classList.add('card-enter');}
