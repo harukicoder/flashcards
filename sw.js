@@ -1,8 +1,7 @@
-const CACHE_NAME = 'inkcards-v2';
 const OFFLINE_URLS = [
   './',
   './index.html',
-  'https://cdn.tailwindcss.com',
+  './manifest.json',
   'https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap',
 ];
 
