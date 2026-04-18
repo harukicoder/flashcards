@@ -1,4 +1,3 @@
-const CACHE_NAME = 'inkcards-v4';
 const OFFLINE_URLS = [
   './',
   './index.html',
