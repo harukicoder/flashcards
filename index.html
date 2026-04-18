@@ -9,25 +9,233 @@
 <meta name="apple-mobile-web-app-title" content="墨卡">
 <link rel="manifest" href="manifest.json">
 <title>墨卡 · Ink Cards — Chinese Flashcards</title>
-<script src="https://cdn.tailwindcss.com"></script>
+<style id="tw">
+/* Minimal Tailwind utilities for 墨卡 · Ink Cards - hand-crafted to match usage */
+*,::before,::after{box-sizing:border-box;border:0 solid #e5e7eb}
+html{-webkit-text-size-adjust:100%;line-height:1.5;tab-size:4;font-family:'DM Sans',ui-sans-serif,system-ui,sans-serif}
+body{margin:0;line-height:inherit}
+h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit;margin:0}
+p{margin:0}
+a{color:inherit;text-decoration:inherit}
+b,strong{font-weight:bolder}
+button,[type='button'],[type='submit']{-webkit-appearance:button;background-color:transparent;background-image:none;cursor:pointer;font-family:inherit;font-size:100%;font-weight:inherit;line-height:inherit;color:inherit;margin:0;padding:0}
+button:disabled{cursor:default}
+input,textarea,select{font-family:inherit;font-size:100%;font-weight:inherit;line-height:inherit;color:inherit;margin:0;padding:0}
+input:focus,textarea:focus,select:focus{outline:2px solid transparent;outline-offset:2px}
+img,svg,video{display:block;vertical-align:middle;max-width:100%;height:auto}
+ul,ol{margin:0;padding:0;list-style:none}
+
+/* Colors - ink palette */
+:root{
+  --ink-50:#faf9f7;--ink-100:#f3f1ec;--ink-200:#e8e4db;--ink-300:#d4cec1;
+  --ink-400:#b5ac99;--ink-500:#968b74;--ink-600:#7a6f5a;--ink-700:#5e5444;
+  --ink-800:#3d3630;--ink-900:#1f1b17;
+  --vermillion:#c4463a;--vermillion-light:#e06b5f;--vermillion-dark:#9e342a;
+  --jade:#4a8c6f;--jade-light:#6aad8e;--jade-dark:#377058;
+}
+
+/* Layout & Display */
+.block{display:block}
+.inline-block{display:inline-block}
+.inline{display:inline}
+.flex{display:flex}
+.inline-flex{display:inline-flex}
+.grid{display:grid}
+.hidden{display:none}
+.relative{position:relative}
+.absolute{position:absolute}
+.fixed{position:fixed}
+
+/* Inset */
+.top-2{top:.5rem}.top-3{top:.75rem}.top-4{top:1rem}
+.right-3{right:.75rem}.right-4{right:1rem}.right-12{right:3rem}
+.left-3{left:.75rem}
+.z-10{z-index:10}
+
+/* Flex */
+.flex-1{flex:1 1 0%}
+.flex-col{flex-direction:column}
+.flex-wrap{flex-wrap:wrap}
+.flex-shrink-0{flex-shrink:0}
+.items-center{align-items:center}
+.justify-center{justify-content:center}
+.justify-between{justify-content:space-between}
+
+/* Gap */
+.gap-1{gap:.25rem}.gap-1\.5{gap:.375rem}.gap-2{gap:.5rem}.gap-3{gap:.75rem}.gap-4{gap:1rem}.gap-5{gap:1.25rem}
+
+/* Grid */
+.grid-cols-1{grid-template-columns:repeat(1,minmax(0,1fr))}
+.grid-cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.col-span-full{grid-column:1/-1}
+
+/* Sizing */
+.w-full{width:100%}.w-1\.5{width:.375rem}.w-3{width:.75rem}.w-3\.5{width:.875rem}.w-4{width:1rem}.w-6{width:1.5rem}.w-7{width:1.75rem}
+.h-full{height:100%}.h-1\.5{height:.375rem}.h-2{height:.5rem}.h-3{height:.75rem}.h-3\.5{height:.875rem}.h-4{height:1rem}.h-6{height:1.5rem}.h-7{height:1.75rem}
+.max-h-52{max-height:13rem}
+.min-w-0{min-width:0}.min-w-\[28px\]{min-width:28px}
+.max-w-xs{max-width:20rem}.max-w-md{max-width:28rem}.max-w-lg{max-width:32rem}.max-w-2xl{max-width:42rem}.max-w-5xl{max-width:64rem}
+
+/* Margin */
+.mx-auto{margin-left:auto;margin-right:auto}.mx-1{margin-left:.25rem;margin-right:.25rem}
+.mb-1{margin-bottom:.25rem}.mb-1\.5{margin-bottom:.375rem}.mb-2{margin-bottom:.5rem}.mb-3{margin-bottom:.75rem}.mb-4{margin-bottom:1rem}.mb-5{margin-bottom:1.25rem}.mb-6{margin-bottom:1.5rem}.mb-8{margin-bottom:2rem}.mb-10{margin-bottom:2.5rem}
+.mt-1\.5{margin-top:.375rem}.mt-2{margin-top:.5rem}.mt-4{margin-top:1rem}
+.ml-0\.5{margin-left:.125rem}.ml-2{margin-left:.5rem}.ml-5{margin-left:1.25rem}.ml-8{margin-left:2rem}.ml-10{margin-left:2.5rem}
+.mr-1{margin-right:.25rem}
+
+/* Padding */
+.p-1{padding:.25rem}.p-4{padding:1rem}.p-5{padding:1.25rem}.p-6{padding:1.5rem}
+.px-2{padding-left:.5rem;padding-right:.5rem}.px-2\.5{padding-left:.625rem;padding-right:.625rem}.px-4{padding-left:1rem;padding-right:1rem}.px-5{padding-left:1.25rem;padding-right:1.25rem}.px-6{padding-left:1.5rem;padding-right:1.5rem}.px-8{padding-left:2rem;padding-right:2rem}
+.py-0\.5{padding-top:.125rem;padding-bottom:.125rem}.py-1{padding-top:.25rem;padding-bottom:.25rem}.py-2{padding-top:.5rem;padding-bottom:.5rem}.py-2\.5{padding-top:.625rem;padding-bottom:.625rem}.py-3{padding-top:.75rem;padding-bottom:.75rem}.py-8{padding-top:2rem;padding-bottom:2rem}.py-12{padding-top:3rem;padding-bottom:3rem}.py-16{padding-top:4rem;padding-bottom:4rem}
+.pr-1{padding-right:.25rem}.pt-1{padding-top:.25rem}.pt-1\.5{padding-top:.375rem}
+
+/* Space between */
+.space-y-2>*+*{margin-top:.5rem}
+.space-y-4>*+*{margin-top:1rem}
+
+/* Typography */
+.text-xs{font-size:.75rem;line-height:1rem}
+.text-sm{font-size:.875rem;line-height:1.25rem}
+.text-base{font-size:1rem;line-height:1.5rem}
+.text-lg{font-size:1.125rem;line-height:1.75rem}
+.text-xl{font-size:1.25rem;line-height:1.75rem}
+.text-2xl{font-size:1.5rem;line-height:2rem}
+.text-3xl{font-size:1.875rem;line-height:2.25rem}
+.text-4xl{font-size:2.25rem;line-height:2.5rem}
+.text-5xl{font-size:3rem;line-height:1}
+.text-6xl{font-size:3.75rem;line-height:1}
+.font-thin{font-weight:100}
+.font-normal{font-weight:400}
+.font-medium{font-weight:500}
+.font-semibold{font-weight:600}
+.font-bold{font-weight:700}
+.italic{font-style:italic}
+.text-center{text-align:center}
+.text-left{text-align:left}
+.leading-none{line-height:1}
+.leading-snug{line-height:1.375}
+.leading-relaxed{line-height:1.625}
+.tracking-wide{letter-spacing:.025em}
+.uppercase{text-transform:uppercase}
+.normal-case{text-transform:none}
+.underline{text-decoration-line:underline}
+.underline-offset-2{text-underline-offset:2px}
+.whitespace-nowrap{white-space:nowrap}
+
+/* Fonts */
+.font-chinese{font-family:'Noto Serif SC','Songti SC','STSong','SimSun',serif}
+.font-display{font-family:'Crimson Pro','Georgia','Times New Roman',serif}
+
+/* Text colors */
+.text-ink-100{color:var(--ink-100)}
+.text-ink-200{color:var(--ink-200)}
+.text-ink-300{color:var(--ink-300)}
+.text-ink-400{color:var(--ink-400)}
+.text-ink-500{color:var(--ink-500)}
+.text-ink-600{color:var(--ink-600)}
+.text-ink-700{color:var(--ink-700)}
+.text-ink-800{color:var(--ink-800)}
+.text-white{color:#fff}
+.text-vermillion{color:var(--vermillion)}
+.text-jade{color:var(--jade)}
+
+/* Placeholder */
+.placeholder\:text-sm::placeholder{font-size:.875rem}
+.placeholder\:text-base::placeholder{font-size:1rem}
+.placeholder\:text-ink-300::placeholder{color:var(--ink-300)}
+
+/* Backgrounds */
+.bg-white{background-color:#fff}
+.bg-white\/70{background-color:rgba(255,255,255,.7)}
+.bg-ink-50{background-color:var(--ink-50)}
+.bg-ink-100{background-color:var(--ink-100)}
+.bg-ink-800{background-color:var(--ink-800)}
+.bg-ink-800\/60{background-color:rgba(61,54,48,.6)}
+.bg-jade{background-color:var(--jade)}
+.bg-vermillion{background-color:var(--vermillion)}
+.bg-amber-500{background-color:#f59e0b}
+.bg-blue-500{background-color:#3b82f6}
+.bg-purple-500{background-color:#a855f7}
+.bg-purple-700{background-color:#7e22ce}
+
+/* Borders */
+.border{border-width:1px}
+.border-t{border-top-width:1px}
+.border-ink-200{border-color:var(--ink-200)}
+.border-ink-200\/50{border-color:rgba(232,228,219,.5)}
+.border-ink-200\/60{border-color:rgba(232,228,219,.6)}
+.border-ink-700{border-color:var(--ink-700)}
+.border-ink-700\/50{border-color:rgba(94,84,68,.5)}
+
+/* Border radius */
+.rounded-md{border-radius:.375rem}
+.rounded-lg{border-radius:.5rem}
+.rounded-xl{border-radius:.75rem}
+.rounded-2xl{border-radius:1rem}
+.rounded-full{border-radius:9999px}
+
+/* Shadow */
+.shadow-sm{box-shadow:0 1px 2px 0 rgba(0,0,0,.05)}
+.shadow-lg{box-shadow:0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -4px rgba(0,0,0,.1)}
+
+/* Misc */
+.overflow-hidden{overflow:hidden}
+.overflow-y-auto{overflow-y:auto}
+.cursor-pointer{cursor:pointer}
+.select-none{user-select:none;-webkit-user-select:none}
+.backdrop-blur-sm{backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.transition-all{transition:all .15s cubic-bezier(.4,0,.2,1)}
+.transition-colors{transition:color .15s,background-color .15s,border-color .15s}
+.transition-transform{transition:transform .15s}
+.duration-500{transition-duration:.5s}
+
+/* Hover */
+.hover\:bg-ink-900:hover{background-color:var(--ink-900)}
+.hover\:bg-vermillion:hover{background-color:var(--vermillion)}
+.hover\:bg-vermillion-dark:hover{background-color:var(--vermillion-dark)}
+.hover\:bg-vermillion\/5:hover{background-color:rgba(196,70,58,.05)}
+.hover\:border-vermillion\/30:hover{border-color:rgba(196,70,58,.3)}
+.hover\:shadow-md:hover{box-shadow:0 4px 6px -1px rgba(0,0,0,.1),0 2px 4px -2px rgba(0,0,0,.1)}
+.hover\:text-ink-600:hover{color:var(--ink-600)}
+.hover\:text-ink-700:hover{color:var(--ink-700)}
+.hover\:text-white:hover{color:#fff}
+.active\:scale-\[0\.97\]:active{transform:scale(.97)}
+
+/* Group hover */
+.group:hover .group-hover\:rotate-90{transform:rotate(90deg)}
+
+/* Responsive: sm (≥640px) */
+@media (min-width:640px){
+  .sm\:inline{display:inline}
+  .sm\:block{display:block}
+  .sm\:grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .sm\:gap-3{gap:.75rem}
+  .sm\:gap-4{gap:1rem}
+  .sm\:mb-14{margin-bottom:3.5rem}
+  .sm\:p-7{padding:1.75rem}
+  .sm\:p-8{padding:2rem}
+  .sm\:px-6{padding-left:1.5rem;padding-right:1.5rem}
+  .sm\:py-12{padding-top:3rem;padding-bottom:3rem}
+  .sm\:py-24{padding-top:6rem;padding-bottom:6rem}
+  .sm\:text-base{font-size:1rem;line-height:1.5rem}
+  .sm\:text-2xl{font-size:1.5rem;line-height:2rem}
+  .sm\:text-3xl{font-size:1.875rem;line-height:2.25rem}
+  .sm\:text-4xl{font-size:2.25rem;line-height:2.5rem}
+  .sm\:text-5xl{font-size:3rem;line-height:1}
+}
+
+/* Responsive: lg (≥1024px) */
+@media (min-width:1024px){
+  .lg\:grid-cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .lg\:px-8{padding-left:2rem;padding-right:2rem}
+}
+</style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script>
-tailwind.config = {
-  theme: { extend: {
-    fontFamily: { chinese: ['"Noto Serif SC"','serif'], body: ['"DM Sans"','sans-serif'], display: ['"Crimson Pro"','serif'] },
-    colors: {
-      ink: { 50:'#faf9f7',100:'#f3f1ec',200:'#e8e4db',300:'#d4cec1',400:'#b5ac99',500:'#968b74',600:'#7a6f5a',700:'#5e5444',800:'#3d3630',900:'#1f1b17' },
-      vermillion: { DEFAULT:'#c4463a',light:'#e06b5f',dark:'#9e342a' },
-      jade: { DEFAULT:'#4a8c6f',light:'#6aad8e',dark:'#377058' }
-    }
-  }}
-}
-</script>
 <style>
 *{box-sizing:border-box}
 body{font-family:'DM Sans',sans-serif;background:#faf9f7;background-image:radial-gradient(ellipse at 20% 0%,rgba(196,70,58,.04) 0%,transparent 50%),radial-gradient(ellipse at 80% 100%,rgba(74,140,111,.04) 0%,transparent 50%);min-height:100vh}
