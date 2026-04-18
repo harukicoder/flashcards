@@ -3,6 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#faf9f7">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="墨卡">
+<link rel="manifest" href="manifest.json">
 <title>墨卡 · Ink Cards — Chinese Flashcards</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -603,11 +608,6 @@ function mkCard(card,idx,anim){
   const hasEx=card.examples&&card.examples.length>0;
   const cardHeight='h-56 sm:h-60';
 
-  // Image: use the first English keyword for Unsplash
-  const imgQuery = (card.english||'').split(';')[0].replace(/^to /,'').replace(/[^a-zA-Z ]/g,'').trim();
-  const hasImg = imgQuery.length > 1;
-  const imgUrl = hasImg ? `https://source.unsplash.com/400x300/?${encodeURIComponent(imgQuery)}` : '';
-
   let exHtml='';
   if(hasEx){
     exHtml='<div class="examples-section w-full px-2">';
@@ -637,14 +637,12 @@ function mkCard(card,idx,anim){
 
   w.innerHTML=`<div class="flashcard relative ${cardHeight}" data-id="${card.id}"><div class="flashcard-inner">
     <div class="flashcard-front bg-white border border-ink-200/50 shadow-sm flex flex-col items-center justify-center p-6 select-none overflow-hidden rounded-2xl">
-      ${hasImg?`<img src="${imgUrl}" alt="" class="absolute inset-0 w-full h-full object-cover opacity-[0.13] pointer-events-none" loading="lazy" onerror="this.style.display='none'">`:''}
       <div class="absolute top-3 left-3 flex items-center gap-1.5 z-10">${hl?`<span class="hsk-badge ${hc}">${esc(hl)}</span>`:''} ${pl?`<span class="pos-badge">${esc(pl)}</span>`:''}</div>
       <button onclick="event.stopPropagation();speak('${card.chinese.replace(/'/g,"\\'")}')" class="audio-btn front-audio absolute top-3 right-3 z-10" title="Listen"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg></button>
       <span class="font-chinese text-4xl sm:text-5xl text-ink-800 mb-3 leading-none relative z-10">${esc(card.chinese)}</span>
       <span class="text-ink-400 text-sm sm:text-base tracking-wide relative z-10">${esc(card.pinyin)}</span>
     </div>
     <div class="flashcard-back bg-ink-800 border border-ink-700 shadow-sm flex flex-col items-center justify-center p-5 select-none overflow-y-auto">
-      ${hasImg?`<img src="${imgUrl}" alt="" class="absolute inset-0 w-full h-full object-cover opacity-[0.08] pointer-events-none rounded-2xl" loading="lazy" onerror="this.style.display='none'">`:''}
       <div class="seal-stamp absolute top-4 right-4"><span>\u8BD1</span></div>
       <span class="font-display text-xl sm:text-2xl text-ink-100 italic text-center leading-snug relative z-10">${esc(card.english)}</span>
       <div class="mt-2 flex items-center gap-1.5 text-ink-400 text-xs relative z-10"><span class="font-chinese">${esc(card.chinese)}</span><span>\u00b7</span><span>${esc(card.pinyin)}</span></div>
@@ -809,6 +807,11 @@ $('quiz-input').addEventListener('keydown', e=>{
 renderCards(true);
 if(initFB(FIREBASE_CONFIG))setupAuth();
 updateAuthUI();
+
+// Register Service Worker for offline support
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
 </script>
 </body>
 </html>
